@@ -1,8 +1,11 @@
 # logging-aggregator
 This is a simple implementation of aggregation/ingestion system for logging events. There is client that sends randomly generated logging events to a server that accepts the events and pushes them on to Kafka. Another server consumes the log events and writes them to a Cassandra database.
-  - Log events represented by an application simple logger output messages. Consisted by attributes
-      - Time. The time log generated..
-      - Severity (FATAL, ERROR, WARN, INFO, DEBUG,TRACE, ALL, OFF). This attribute tells how severe is the message. Any         Severity level its more important than others on its right side,meaning that, just for pointing out, setting a logger to a specific level will output logs also for the levels on the right side of the specific selection..
+
+Defining the conceptual model of the system:
+
+  - Log events represented by an application simple logger output messages. Consisted by attributes such as
+      - Time. The time log generated, saved as timestamp in cassandra and used as Instant in java because of convenient use of java driver for cassandra db.
+      - Severity (FATAL, ERROR, WARN, INFO, DEBUG,TRACE, ALL, OFF). This attribute tells how severe the message is. Any         Severity level its more important than the levels on its right side, meaning that, setting a logger to a specific level will also generate logs for the levels on the right side of the specific selection.
       - Source name. This attribute is the java class name from which the log came from.
       - Message. The message it self
       - Thread could be used, but ommited
