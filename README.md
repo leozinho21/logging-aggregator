@@ -205,6 +205,8 @@ SimpleSerializer is a custom class that will be used to serialize the value obje
   
 </code>  
 
+As you see on the code snippet our KafkaConsumer listen to logging-events topic.
+
 <ul> 
  <li>BOOTSTRAP_SERVERS_CONFIG: The Kafka broker's address. If Kafka is running in a cluster then you can provide comma (,) seperated addresses. For example:localhost:9091,localhost:9092.</li> 
  <li>GROUP_ID_CONFIG: The consumer group id used to identify to which group this consumer belongs.</li> 
@@ -212,4 +214,42 @@ SimpleSerializer is a custom class that will be used to serialize the value obje
  <li>VALUE_DESERIALIZER_CLASS_CONFIG: The class name to deserialize the value object. We have used json serializing LoggingEvent as the value so we will be using <strong>LoggingEventDeserializer</strong> as the deserializer class./li> 
 </ul>
 
+Running the consumer
 
+<code>
+	
+private void runConsumer() {
+		
+		Consumer<Object, LogEvent> consumer = createConsumer();
+		
+		int noMessageFound = 0;
+		int giveUp = 100;
+		
+		while (true) {
+			ConsumerRecords<Object, LogEvent> consumerRecords = consumer.poll(Duration.ofMillis(1000));
+			// 1000 is the time in milliseconds consumer will wait if no record is found at
+			// broker.
+			if (consumerRecords.count() == 0) {
+				noMessageFound++;
+				if (noMessageFound > giveUp)
+					// If no message found count is reached to threshold exit loop.
+					break;
+				else
+					continue;
+			}
+
+			LogEventsRepository repo = connectToRepository();
+
+			consumerRecords.forEach(record -> {
+				UUID uuid = repo.insertLogEvent(record.value());
+				logger.debug("Saved record with uuid [{}] Key [{}] partition [{}] offset [{}]", uuid, record.key(),
+						record.partition(), record.offset());
+			});
+			// commits the offset of record to broker.
+			consumer.commitAsync();
+		}
+		consumer.close();
+	}
+</code>
+
+As the code snippet points out our consumer will try max of 100 times with wait time of 1000ms (1sec), to find new records associated with hes offset,and if any found will save them on repository and commit the offset async.
