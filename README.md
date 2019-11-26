@@ -1,14 +1,68 @@
 # logging-aggregator
+
 This is a simple implementation of aggregation/ingestion system for logging events. There is client that sends randomly generated logging events to a server that accepts the events and pushes them on to Kafka. Another server consumes the log events and writes them to a Cassandra database.
 
-Defining the conceptual model of the system:
+<h5> Defining the conceptual model of the system: </h5>
 
-  - Log events represented by an application simple logger output messages. Consisted by attributes such as
-      - Time. The time log generated, saved as timestamp in cassandra and used as Instant in java because of convenient use of java driver for cassandra db.
-      - Severity (FATAL, ERROR, WARN, INFO, DEBUG,TRACE, ALL, OFF). This attribute tells how severe the message is. Any         Severity level its more important than the levels on its right side, meaning that, setting a logger to a specific level will also generate logs for the levels on the right side of the specific selection.
-      - Source name. This attribute is the java class name from which the log came from.
-      - Message. The message it self
-      - Thread could be used, but ommited
+Log events represented by an application simple logger output messages. Consisted by attributes such as
+  <ol>
+    <li>Time. This is a timestamp attribute and shows the time log generated.</li>
+    <li>Severity (FATAL, ERROR, WARN, INFO, DEBUG,TRACE, ALL, OFF). This is an enum attribute that tells us how severe the message is. Any Severity level its more important than the levels on its right side, meaning that, setting a logger to a specific level will also generate logs for the levels on the right side of the specific selection.</li>
+    <li>Source name. This is string attribute and if the log was an application log, i.e java application, it would be the class name from which the log was generated</li>
+    <li>Message. String attribute representing the message it self</li>
+    <li>Schema Version. Integer attribute value</li>
+    <li>In application log events we could add more attributes such as thread,appender etc.</li>
+  </ol>
+  
+# Apache Thrift
+Apache Thrift was originally developed by the Facebook development team and is currently maintained by Apache.
+Thrift uses a special Interface Description Language (IDL) to define data types and service interfaces which are stored as .thrift files and used later as input by the thrift compiler for generating the source code of client and server software that communicate over different programming languages.
+
+Used latest version 0.13.0 from the <a href="https://search.maven.org/classic/#search%7Cgav%7C1%7Cg%3A%22org.apache.thrift%22%20AND%20a%3A%22libthrift%22">Maven repository</a>.
+
+<h5>Base Types </h5>
+<ul>
+  <li>bool – a boolean value (true or false)</li>
+  <li>byte – an 8-bit signed integer</li>
+  <li>i16 – a 16-bit signed integer</li>
+  <li>i32 – a 32-bit signed integer</li>
+  <li>i64 – a 64-bit signed integer</li>
+  <li>double – a 64-bit floating point number</li>
+  <li>string – a text string encoded using UTF-8 encoding </li>
+</ul>
+
+<h5>Special Types </h5>
+<ul>
+  <li>binary – a sequence of unencoded bytes</li>
+  <li>optional – a Java 8's Optional type</li>
+</ul>
+  
+<h5>Structs</h5>
+  
+Thrift structs are the equivalent of classes in OOP languages but without inheritance. A struct has a set of strongly typed fields, each with a unique name as an identifier. Fields may have various annotations (numeric field IDs, optional default values, etc.).
+
+<h5> Containers </h5>
+
+Thrift containers are strongly typed containers:
+
+<ul>
+  <li>list – an ordered list of elements</li>
+  <li>set – an unordered set of unique elements</li>
+  <li>map<type1,type2> – a map of strictly unique keys to values
+Container elements may be of any valid Thrift type.</li>
+</ul>
+
+<h5>Exceptions</h5>
+
+Exceptions are functionally equivalent to structs, except that they inherit from the native exceptions.
+
+<h5>Services</h5>
+
+Services are actually communication interfaces defined using Thrift types. They consist of a set of named functions, each with a list of parameters and a return type.
+
+<h5>Source Code Generation</h5>
+
+Code generated using Maven Plugin maven-thrift-plugin version 0.1.11. Both Thrift-Client and Thrift-Server modules have the same logging.thrift file on src/main/thrift for generating java classes.
 
 One thing about Apache Thrift is that it has its own client-server communication framework which makes communication easy. First we define a transport layer with the implementation of TServerTransport interface (or abstract class, to be more precise). Since we are talking about server, we need to provide a port to listen to. Then we need to define a TServer instance and choose one of the available implementations:
 
