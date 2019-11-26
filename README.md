@@ -388,9 +388,10 @@ Enter the following unit definition into the file: /etc/systemd/system/zookeeper
 
 <div>[Install]</div>
 <div>WantedBy=multi-user.target</div>
-<div>The [Unit] section specifies that Zookeeper requires networking and the filesystem to be ready before it can start.</div>
 </code>
-	
+
+The [Unit] section specifies that Zookeeper requires networking and the filesystem to be ready before it can start.
+
 The [Service] section specifies that systemd should use the zookeeper-server-start.sh and zookeeper-server-stop.sh shell files for starting and stopping the service. It also specifies that Zookeeper should be restarted automatically if it exits abnormally.
 
 Next, create the systemd service file for kafka:
