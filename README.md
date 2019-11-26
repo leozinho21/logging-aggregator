@@ -97,6 +97,24 @@ Let’s start with a short survey of some of the key concepts of Cassandra:
   <li>Column – A column in Cassandra is a data structure which contains a column name, a value and a timestamp. The columns and the number of columns in each row may vary in contrast with a relational database where data are well structured</li>
 </ul>
 
+<h4> Connecting to Cassandra</h4>
 
+In order to connect to Cassandra from Java, we need to build a Cluster object.
 
+An address of a node needs to be provided as a contact point. If we don't provide a port number, the default port (9042) will be used.
 
+These settings allow the driver to discover the current topology of a cluster.
+
+<h4> Creating the Keyspace </h4> 
+
+At this part we create the keyspaceName and define two more parameters, the replicationFactor and the replicationStrategy. These parameters determine the number of replicas and how the replicas will be distributed across the ring, respectively.
+
+With replication Cassandra ensures reliability and fault tolerance by storing copies of data in multiple nodes.
+
+<h4> Creating a Column Family </h4>
+
+The code to test that the Column Family has been created, is provided below:
+
+<h4> Inserting Data in the Column Family</h4>
+
+// creating select query in order to make reads faster we can replicate our table data to new table with query satisfying columns 
