@@ -399,20 +399,22 @@ Next, create the systemd service file for kafka:
 
 Enter the following unit definition into the file: /etc/systemd/system/kafka.service
 
-[Unit]
-Requires=zookeeper.service
-After=zookeeper.service
+<code>
 
-[Service]
-Type=simple
-User=kafka
-ExecStart=/bin/sh -c '/home/kafka/kafka/bin/kafka-server-start.sh /home/kafka/kafka/config/server.properties > /home/kafka/kafka/kafka.log 2>&1'
-ExecStop=/home/kafka/kafka/bin/kafka-server-stop.sh
-Restart=on-abnormal
+<div>[Unit] </div>
+<div>Requires=zookeeper.service</div>
+<div>After=zookeeper.service</div>
 
-[Install]
-WantedBy=multi-user.target
+<div>[Service]</div>
+<div>Type=simple</div>
+<div>User=kafka</div>
+<div>ExecStart=/bin/sh -c '/home/kafka/kafka/bin/kafka-server-start.sh /home/kafka/kafka/config/server.properties > /home/kafka/kafka/kafka.log 2>&1'</div>
+<div>ExecStop=/home/kafka/kafka/bin/kafka-server-stop.sh</div>
+<div>Restart=on-abnormal</div>
 
+<div>[Install]</div>
+<div>WantedBy=multi-user.target</div>
+</code>
 
 The [Unit] section specifies that this unit file depends on zookeeper.service. This will ensure that zookeeper gets started automatically when the kafka service starts.
 
