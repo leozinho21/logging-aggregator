@@ -375,20 +375,20 @@ Create the unit file for zookeeper:
 
 Enter the following unit definition into the file: /etc/systemd/system/zookeeper.service
 <code>
-[Unit]
-Requires=network.target remote-fs.target
-After=network.target remote-fs.target
+<div>[Unit]</div>
+<div>Requires=network.target remote-fs.target</div>
+<div>After=network.target remote-fs.target</div>
 
-[Service]
-Type=simple
-User=kafka
-ExecStart=/home/kafka/kafka/bin/zookeeper-server-start.sh /home/kafka/kafka/config/zookeeper.properties
-ExecStop=/home/kafka/kafka/bin/zookeeper-server-stop.sh
-Restart=on-abnormal
+<div>[Service]</div>
+<div>Type=simple</div>
+<div>User=kafka</div>
+<div>ExecStart=/home/kafka/kafka/bin/zookeeper-server-start.sh /home/kafka/kafka/config/zookeeper.properties</iv>
+<div>ExecStop=/home/kafka/kafka/bin/zookeeper-server-stop.sh</div>
+<div>Restart=on-abnormal</div>
 
-[Install]
-WantedBy=multi-user.target
-The [Unit] section specifies that Zookeeper requires networking and the filesystem to be ready before it can start.
+<div>[Install]</div>
+<div>WantedBy=multi-user.target</div>
+<div>The [Unit] section specifies that Zookeeper requires networking and the filesystem to be ready before it can start.</div>
 </code>
 	
 The [Service] section specifies that systemd should use the zookeeper-server-start.sh and zookeeper-server-stop.sh shell files for starting and stopping the service. It also specifies that Zookeeper should be restarted automatically if it exits abnormally.
