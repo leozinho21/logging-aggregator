@@ -20,7 +20,7 @@ Thrift uses a special Interface Description Language (IDL) to define data types 
 
 Used latest version 0.13.0 from the <a href="https://search.maven.org/classic/#search%7Cgav%7C1%7Cg%3A%22org.apache.thrift%22%20AND%20a%3A%22libthrift%22">Maven repository</a>.
 
-<h5>Base Types </h5>
+<h4>Base Types </h4>
 <ul>
   <li>bool – a boolean value (true or false)</li>
   <li>byte – an 8-bit signed integer</li>
@@ -31,17 +31,17 @@ Used latest version 0.13.0 from the <a href="https://search.maven.org/classic/#s
   <li>string – a text string encoded using UTF-8 encoding </li>
 </ul>
 
-<h5>Special Types </h5>
+<h4>Special Types </h4>
 <ul>
   <li>binary – a sequence of unencoded bytes</li>
   <li>optional – a Java 8's Optional type</li>
 </ul>
   
-<h5>Structs</h5>
+<h4>Structs</h4>
   
 Thrift structs are the equivalent of classes in OOP languages but without inheritance. A struct has a set of strongly typed fields, each with a unique name as an identifier. Fields may have various annotations (numeric field IDs, optional default values, etc.).
 
-<h5> Containers </h5>
+<h4> Containers </h4>
 
 Thrift containers are strongly typed containers:
 
@@ -52,11 +52,11 @@ Thrift containers are strongly typed containers:
 Container elements may be of any valid Thrift type.</li>
 </ul>
 
-<h5>Exceptions</h5>
+<h4>Exceptions</h4>
 
 Exceptions are functionally equivalent to structs, except that they inherit from the native exceptions.
 
-<h5>Services</h5>
+<h4>Services</h4>
 
 Services are actually communication interfaces defined using Thrift types. They consist of a set of named functions, each with a list of parameters and a return type.
 
@@ -99,22 +99,16 @@ Let’s start with a short survey of some of the key concepts of Cassandra:
 
 <h4> Connecting to Cassandra</h4>
 
+Used Cassandra java driver 4.1.0 from <a href="https://mvnrepository.com/artifact/com.datastax.oss/java-driver-core/4.1.0">Maven Repository</a>
 In order to connect to Cassandra from Java, we need to build a Cluster object.
-
-An address of a node needs to be provided as a contact point. If we don't provide a port number, the default port (9042) will be used.
-
-These settings allow the driver to discover the current topology of a cluster.
+An address of a node needs to be provided as a contact point. If we don't provide a port number, the default port (9042) will be used. These settings allow the driver to discover the current topology of a cluster.
 
 <h4> Creating the Keyspace </h4> 
 
 At this part we create the keyspaceName and define two more parameters, the replicationFactor and the replicationStrategy. These parameters determine the number of replicas and how the replicas will be distributed across the ring, respectively.
-
 With replication Cassandra ensures reliability and fault tolerance by storing copies of data in multiple nodes.
 
-<h4> Creating a Column Family </h4>
+In this example i've chosen single table with name logging_events_by_severity and clustering columns event_id,severity,creation_date and source_name. The only call to repository added on code is the selectAll case which returns data ordered ascending first by severity then by creation_date and last by source_name.If we wanted to implement another query we could create a new table with columns that are convenient for reading and replicate the data.
+This way, many of the tables in your data model contain duplicate data. This is not a downside of this database. On the contrary, this practice optimizes the performance of the reads.
 
-The code to test that the Column Family has been created, is provided below:
 
-<h4> Inserting Data in the Column Family</h4>
-
-// creating select query in order to make reads faster we can replicate our table data to new table with query satisfying columns 
