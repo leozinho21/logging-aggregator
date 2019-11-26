@@ -78,7 +78,7 @@ Define the transport and point it to our server instance, then choose the suitab
 
 Since it is based on .thrift file definitions we can directly call methods described there.
 
-# Cassandra
+# Apache Cassandra
 
 Cassandra is a scalable NoSQL database that provides continuous availability with no single point of failure and gives the ability to handle large amounts of data with exceptional performance.
 
@@ -108,7 +108,108 @@ An address of a node needs to be provided as a contact point. If we don't provid
 At this part we create the keyspaceName and define two more parameters, the replicationFactor and the replicationStrategy. These parameters determine the number of replicas and how the replicas will be distributed across the ring, respectively.
 With replication Cassandra ensures reliability and fault tolerance by storing copies of data in multiple nodes.
 
-In this example i've chosen single table with name logging_events_by_severity and clustering columns event_id,severity,creation_date and source_name. The only call to repository added on code is the selectAll case which returns data ordered ascending first by severity then by creation_date and last by source_name.If we wanted to implement another query we could create a new table with columns that are convenient for reading and replicate the data.
+In this example for the domain model LogEvent i have chosen a table name logging_events_by_severity and clustering columns event_id,severity,creation_date and source_name. The only call to repository added on code is the selectAll case which returns data ordered ascending first by severity then by creation_date and last by source_name.If we wanted to implement another query we could create a new table with columns that are convenient for reading and replicate the data.
 This way, many of the tables in your data model contain duplicate data. This is not a downside of this database. On the contrary, this practice optimizes the performance of the reads.
+
+
+# Apache Kafka 
+
+Kafka is one of the most popular publisher-subscriber models written in Java and Scala. It was originally developed by LinkedIn and later open-sourced. Kafka is known for handling heavy loads, i.e. I/O operations. You can find out more about Kafka <a href="http://kafka.apache.org/" target="_blank" rel="nofollow">here</a>
+
+<h4>Core concepts</h4>
+<ul>
+    <li>Kafka is run as a cluster on one or more servers that can span multiple datacenters.</li>
+    <li>The Kafka cluster stores streams of <i>records</i> in categories called <i>topics</i>.</li>
+    <li>Each record consists of a key, a value, and a timestamp.</li>
+</ul>
+
+<p>Kafka has four core APIs:</p>
+
+<ul style="float: left; width: 40%;">
+      <li>The <a href="/documentation.html#producerapi">Producer API</a> allows an application to publish a stream of records to one or more Kafka topics.
+      </li><li>The <a href="/documentation.html#consumerapi">Consumer API</a> allows an application to subscribe to one or more topics and process the stream of records produced to them.
+    </li><li>The <a href="/documentation/streams">Streams API</a> allows an application to act as a <i>stream processor</i>, consuming an input stream from one or more topics and producing an output stream to one or more output topics, effectively transforming the input streams to output streams.
+    </li><li>The <a href="/documentation.html#connect">Connector API</a> allows building and running reusable producers or consumers that connect Kafka topics to existing applications or data systems. For example, a connector to a relational database might capture every change to a table.
+  </li>
+</ul>
+
+For the needs of this application only the first two apis used,Producer and Consumer API.
+
+<h4>Creating a Producer</h4>
+
+Code snippet below shows the job done:
+
+<code>
+public static Producer<Object, LoggingEvent> createProducer() {
+		Properties props = new Properties();
+		
+		//If Kafka is running in a cluster then you can provide comma (,) separated addresses. 
+		//For example:localhost:9091,localhost:9092 
+		
+		props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+		props.put(ProducerConfig.CLIENT_ID_CONFIG, "thrift-client");
+		
+		// we add key serializer class even if we dont use it because kafka requires default key class
+		props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, LongSerializer.class.getName());
+		props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, SimpleSerializer.class.getName());
+		
+		return new KafkaProducer<>(props);
+	}
+</code>
+
+SimpleSerializer is a custom class that will be used to serialize the value object of LoggingEvent (the generated class from Thrift) with the help of jackson api DataMapper class.
+
+<code>
+  public class SimpleSerializer implements Serializer<LoggingEvent> {
+	
+	private Logger logger = LoggerFactory.getLogger(getClass());
+
+	@Override
+	public byte[] serialize(String topic, LoggingEvent data) {
+		
+		byte[] retVal = null;
+		
+		ObjectMapper objectMapper = new ObjectMapper();
+		
+		try {
+			retVal = objectMapper.writeValueAsString(data).getBytes();
+		} catch (Exception exception) {
+			logger.error("Error in serializing object [{}],[{}]" , data , exception.getMessage());
+		}
+		
+		return retVal;
+	}
+
+}
+</code>
+
+<h4>Creating a Consumer</h4>
+
+<code>
+  public static KafkaConsumer<Object, LogEvent> createConsumer() {
+  
+		Properties props = new Properties();
+		props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+		props.put(ConsumerConfig.GROUP_ID_CONFIG, "consumerGroup1");
+		props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class.getName());
+		props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, LoggingEventDeserializer.class.getName());
+		props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 1);
+		props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+            props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+
+            KafkaConsumer<Object, LogEvent> consumer = new KafkaConsumer<>(props);
+            consumer.subscribe(Collections.singletonList("logging-events"));
+
+            return consumer;
+	}
+  
+</code>  
+
+<ul> 
+ <li>BOOTSTRAP_SERVERS_CONFIG: The Kafka broker's address. If Kafka is running in a cluster then you can provide comma (,) seperated addresses. For example:localhost:9091,localhost:9092.</li> 
+ <li>GROUP_ID_CONFIG: The consumer group id used to identify to which group this consumer belongs.</li> 
+ <li>KEY_DESERIALIZER_CLASS_CONFIG: Our key is null but we just need to provide a class.For specific implementations you can create your custom deserializer by implementing the <strong>Deserializer</strong> interface provided by Kafka.</li> 
+ <li>VALUE_DESERIALIZER_CLASS_CONFIG: The class name to deserialize the value object. We have used json serializing LoggingEvent as the value so we will be using <strong>LoggingEventDeserializer</strong> as the deserializer class./li> 
+</ul>
 
 
