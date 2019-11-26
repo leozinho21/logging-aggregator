@@ -253,3 +253,211 @@ private void runConsumer() {
 </code>
 
 As the code snippet points out our consumer will try max of 100 times with wait time of 1000ms (1sec), to find new records associated with hes offset,and if any found will save them on repository and commit the offset async.
+
+
+# Installation
+
+Installation guide is reffered only to linux environment users.
+
+<h4> Software versions </h4>
+
+<ul>
+    <li>JDK 8, it is important to use jdk and not jre, because maven compiler requires jdk.</li>
+    <li>Thrift 0.13.0 latest </li>
+    <li>Kafka 2.11-2.1.1</li>
+    <li>Cassandra 3.11.5</li>
+    <li>Shell: bash 4.4.20</li>
+</ul>
+
+<h4> JDK 8 installation</h4>
+
+To install this version, first update the package index:
+
+<code>sudo apt update</code>
+
+Next, check if Java is already installed:
+
+<code>java -version</code>
+
+If Java is not currently installed, you’ll see the following output:
+
+Command 'java' not found, but can be installed with:
+
+<code>apt install default-jre</code>
+<code>apt install openjdk-11-jre-headless</code>
+<code>apt install openjdk-8-jre-headless</code>
+<code>apt install openjdk-9-jre-headless</code>
+
+To install jdk enter
+
+<code>sudo apt install default-jdk</code>
+
+If you have already installed a jdk but you re using a jre you can switch to jdk by typing
+<code>sudo update-alternatives --config java</code>
+
+and selecting according version.
+
+<h4> Installing Thrift </h4>
+
+Thrift is an maven dependency and its managed through maven-thrift-plugin so we don't need to download and install the compiler. An important notice about maven-thrift-plugin is thats its under build->pluginManagement->plugins and not build->plugins like maven-compiler-plugin.
+
+<h4> Installing kafka </h4>
+
+If you don't want to create a dedicated kafka user you should skip step 1.
+
+<h4>Step 1 — Creating a User for Kafka</h4>
+
+Since Kafka can handle requests over a network, you should create a dedicated user for it. This minimizes damage to your Ubuntu machine should the Kafka server be compromised. We will create a dedicated kafka user in this step, but you should create a different non-root user to perform other tasks on this server once you have finished setting up Kafka.
+
+Logged in as your non-root sudo user, create a user called kafka with the useradd command:
+
+<code>sudo useradd kafka -m</code>
+The -m flag ensures that a home directory will be created for the user. This home directory, /home/kafka, will act as our workspace directory for executing commands in the sections below.
+
+Set the password using passwd:
+
+<code>sudo passwd kafka</code>
+Add the kafka user to the sudo group with the adduser command, so that it has the privileges required to install Kafka’s dependencies:
+
+<code>sudo adduser kafka sudo</code>
+Your kafka user is now ready. Log into this account using su:
+
+<code> su -l kafka </code>
+Now that we’ve created the Kafka-specific user, we can move on to downloading and extracting the Kafka binaries.
+
+<h4>Step 2 — Downloading and Extracting the Kafka Binaries</h4>
+
+Let’s download and extract the Kafka binaries into dedicated folders in our kafka user’s home directory.
+
+To start, create a directory in /home/kafka called Downloads to store your downloads:
+
+<code>mkdir ~/Downloads</code>
+
+Use curl to download the Kafka binaries:
+
+<code>curl "https://www.apache.org/dist/kafka/2.1.1/kafka_2.11-2.1.1.tgz" -o ~/Downloads/kafka.tgz </code>
+Create a directory called kafka and change to this directory. This will be the base directory of the Kafka installation:
+
+<code>mkdir ~/kafka && cd ~/kafka</code>
+
+Extract the archive you downloaded using the tar command:
+
+<code>tar -xvzf ~/Downloads/kafka.tgz --strip 1</code>
+
+We specify the --strip 1 flag to ensure that the archive’s contents are extracted in ~/kafka/ itself and not in another directory (such as ~/kafka/kafka_2.11-2.1.1/) inside of it.
+
+Now that we’ve downloaded and extracted the binaries successfully, we can move on configuring to Kafka to allow for topic deletion.
+
+<h4>Step 3 — Configuring the Kafka Server</h4>
+
+Kafka’s default behavior will not allow us to delete a topic, the category, group, or feed name to which messages can be published. To modify this, let’s edit the configuration file.
+
+Kafka’s configuration options are specified in server.properties. Open this file with nano or your favorite editor:
+
+<code>nano ~/kafka/config/server.properties</code>
+
+Let’s add a setting that will allow us to delete Kafka topics. Add the following to the bottom of the file:
+
+<code>~/kafka/config/server.properties</code>
+<code>delete.topic.enable = true</code>
+
+Save the file, and exit nano. Now that we’ve configured Kafka, we can move on to creating systemd unit files for running and enabling it on startup.
+
+<h4>Step 4 — Creating Systemd Unit Files and Starting the Kafka Server</h4>
+
+In this section, we will create systemd unit files for the Kafka service. This will help us perform common service actions such as starting, stopping, and restarting Kafka in a manner consistent with other Linux services.
+
+Zookeeper is a service that Kafka uses to manage its cluster state and configurations. It is commonly used in many distributed systems as an integral component. If you would like to know more about it, visit the official Zookeeper docs.
+
+Create the unit file for zookeeper:
+
+<code>sudo nano /etc/systemd/system/zookeeper.service</code>
+
+Enter the following unit definition into the file: /etc/systemd/system/zookeeper.service
+
+[Unit]
+Requires=network.target remote-fs.target
+After=network.target remote-fs.target
+
+[Service]
+Type=simple
+User=kafka
+ExecStart=/home/kafka/kafka/bin/zookeeper-server-start.sh /home/kafka/kafka/config/zookeeper.properties
+ExecStop=/home/kafka/kafka/bin/zookeeper-server-stop.sh
+Restart=on-abnormal
+
+[Install]
+WantedBy=multi-user.target
+The [Unit] section specifies that Zookeeper requires networking and the filesystem to be ready before it can start.
+
+	
+The [Service] section specifies that systemd should use the zookeeper-server-start.sh and zookeeper-server-stop.sh shell files for starting and stopping the service. It also specifies that Zookeeper should be restarted automatically if it exits abnormally.
+
+Next, create the systemd service file for kafka:
+
+<code>sudo nano /etc/systemd/system/kafka.service </code>
+
+Enter the following unit definition into the file: /etc/systemd/system/kafka.service
+
+[Unit]
+Requires=zookeeper.service
+After=zookeeper.service
+
+[Service]
+Type=simple
+User=kafka
+ExecStart=/bin/sh -c '/home/kafka/kafka/bin/kafka-server-start.sh /home/kafka/kafka/config/server.properties > /home/kafka/kafka/kafka.log 2>&1'
+ExecStop=/home/kafka/kafka/bin/kafka-server-stop.sh
+Restart=on-abnormal
+
+[Install]
+WantedBy=multi-user.target
+
+
+The [Unit] section specifies that this unit file depends on zookeeper.service. This will ensure that zookeeper gets started automatically when the kafka service starts.
+
+The [Service] section specifies that systemd should use the kafka-server-start.sh and kafka-server-stop.sh shell files for starting and stopping the service. It also specifies that Kafka should be restarted automatically if it exits abnormally.
+
+Now that the units have been defined, start Kafka with the following command:
+
+<code>sudo systemctl start kafka</code>
+
+To ensure that the server has started successfully, check the journal logs for the kafka unit:
+
+<code>sudo journalctl -u kafka</code>
+You should see output similar to the following:
+
+Output
+Νοε 22 20:40:45 leonidas-P55A-UD3R systemd[1]: Started kafka.service
+You now have a Kafka server listening on port 9092.
+
+While we have started the kafka service, if we were to reboot our server, it would not be started automatically. To enable kafka on server boot, run:
+
+<code>sudo systemctl enable kafka</code>
+
+<h4> Cassandra Installation </h4>
+
+<strong>Adding Cassandra repository to the Ubuntu Source list</strong>
+
+In this step, you will add Cassandra’s repository to Ubuntu’s sources list as shown in the command below:
+
+<code>echo "deb http://www.apache.org/dist/cassandra/debian 311x main" | sudo tee -a 
+/etc/apt/sources.list.d/cassandra.sources.list</code>
+
+<strong>Add Apache Cassandra’s repository Keys</strong>
+Next, add Cassandra’s repository keys using the command below
+
+<code>curl https://www.apache.org/dist/cassandra/KEYS | sudo apt-key add -</code>
+
+<strong>Install Apache Cassandra</strong>
+After appending Cassandra’s repository keys, update the system repositories for the changes to be registered.
+
+<code>sudo apt update</code>
+Run the command below to install Cassandra:
+
+<code>sudo apt install cassandra</code>
+
+To check if Cassandra is running execute:
+
+<code>systemctl status cassandra</code>
+
