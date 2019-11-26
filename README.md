@@ -374,7 +374,7 @@ Create the unit file for zookeeper:
 <code>sudo nano /etc/systemd/system/zookeeper.service</code>
 
 Enter the following unit definition into the file: /etc/systemd/system/zookeeper.service
-
+<code>
 [Unit]
 Requires=network.target remote-fs.target
 After=network.target remote-fs.target
@@ -389,7 +389,7 @@ Restart=on-abnormal
 [Install]
 WantedBy=multi-user.target
 The [Unit] section specifies that Zookeeper requires networking and the filesystem to be ready before it can start.
-
+</code>
 	
 The [Service] section specifies that systemd should use the zookeeper-server-start.sh and zookeeper-server-stop.sh shell files for starting and stopping the service. It also specifies that Zookeeper should be restarted automatically if it exits abnormally.
 
@@ -404,6 +404,7 @@ Enter the following unit definition into the file: /etc/systemd/system/kafka.ser
 <div>[Unit] </div>
 <div>Requires=zookeeper.service</div>
 <div>After=zookeeper.service</div>
+
 
 <div>[Service]</div>
 <div>Type=simple</div>
