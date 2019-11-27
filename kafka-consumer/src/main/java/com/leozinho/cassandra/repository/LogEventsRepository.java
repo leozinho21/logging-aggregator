@@ -1,8 +1,11 @@
 package com.leozinho.cassandra.repository;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.CqlSessionBuilder;
 import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
@@ -13,13 +16,8 @@ import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 import com.datastax.oss.driver.api.querybuilder.insert.RegularInsert;
 import com.datastax.oss.driver.api.querybuilder.schema.CreateTable;
 import com.datastax.oss.driver.api.querybuilder.select.Select;
-
 import com.leozinho.cassandra.domain.LogEvent;
 import com.leozinho.cassandra.domain.Severity;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 
 public class LogEventsRepository {
 	
@@ -36,7 +34,7 @@ public class LogEventsRepository {
         CreateTable createTable = SchemaBuilder.createTable(TABLE_NAME).ifNotExists()
           .withPartitionKey("event_id", DataTypes.UUID)
           .withClusteringColumn("severity", DataTypes.TEXT)
-          .withClusteringColumn("time", DataTypes.TEXT)
+          .withClusteringColumn("creation_date", DataTypes.TIMESTAMP)
           .withClusteringColumn("source_name", DataTypes.TEXT)
           .withColumn("message", DataTypes.TEXT)
           .withColumn("schema_version", DataTypes.INT);
@@ -60,7 +58,7 @@ public class LogEventsRepository {
         RegularInsert insertInto = QueryBuilder.insertInto(TABLE_NAME)
           .value("event_id", QueryBuilder.bindMarker())
           .value("severity", QueryBuilder.bindMarker())
-          .value("time", QueryBuilder.bindMarker())
+          .value("creation_date", QueryBuilder.bindMarker())
           .value("source_name", QueryBuilder.bindMarker())
           .value("message", QueryBuilder.bindMarker())
           .value("schema_version", QueryBuilder.bindMarker());
@@ -76,7 +74,7 @@ public class LogEventsRepository {
         BoundStatement statement = preparedStatement.bind()
           .setUuid(0, logEvent.getId())
           .setString(1, logEvent.getSeverity().name())
-          .setString(2, logEvent.getTime())
+          .setInstant(2, logEvent.getCreationDate())
           .setString(3, logEvent.getSourceName())
           .setString(4, logEvent.getMessage())
           .setInt(5, 	logEvent.getSchemaVersion());
@@ -102,7 +100,7 @@ public class LogEventsRepository {
         	LogEvent ev = new LogEvent();
         	ev.setId(x.getUuid("event_id"));
         	ev.setSeverity(Severity.valueOf(x.getString("severity")));
-        	ev.setTime(x.getString("time"));
+        	ev.setCreationDate(x.getInstant("creation_date"));
         	ev.setSourceName(x.getString("source_name"));
         	ev.setMessage(x.getString("message"));
         	ev.setSchemaVersion(x.getInt("schema_version"));

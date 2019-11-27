@@ -1,5 +1,6 @@
 package com.leozinho.cassandra.domain;
 
+import java.time.Instant;
 import java.util.UUID;
 
 public class LogEvent {
@@ -9,19 +10,20 @@ public class LogEvent {
     private String message;
     private String sourceName;
     private Severity severity;
+    private Instant	creationDate;
     private String time;
     
     public LogEvent() {}
     
-    public LogEvent(UUID id, String message, String time) {
+    public LogEvent(UUID id, String message, Instant creationDate) {
         this.id = id;
         this.message = message;
-        this.time = time;
+        this.creationDate = creationDate;
     }
     
     @Override
     public String toString() {
-    	return "["+time+"] " + severity + "  " + sourceName + " - " + message;
+    	return "["+creationDate+"] " + severity + "  " + sourceName + " - " + message;
     }
     
     public String getMessage() {
@@ -67,6 +69,14 @@ public class LogEvent {
 
 	public void setSchemaVersion(Integer schemaVersion) {
 		this.schemaVersion = schemaVersion;
+	}
+
+	public Instant getCreationDate() {
+		return creationDate;
+	}
+
+	public void setCreationDate(Instant creationDate) {
+		this.creationDate = creationDate;
 	}
 
 }

@@ -1,5 +1,9 @@
 package com.leozinho.kafka.consumer;
 
+
+
+import java.time.Instant;
+
 import org.apache.kafka.common.serialization.Deserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +29,9 @@ public class LoggingEventDeserializer implements Deserializer<LogEvent> {
 		
 		try {
 			object = mapper.readValue(data, LogEvent.class);
+			if(object.getTime() != null) {
+				object.setCreationDate(Instant.parse(object.getTime()));
+			}
 		} catch (Exception exception) {
 			logger.error("Error in deserializing bytes {}", exception.getMessage());
 		}
