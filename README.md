@@ -304,6 +304,7 @@ Thrift is an maven dependency and its managed through maven-thrift-plugin so we 
 <h4> Installing kafka </h4>
 
 If you don't want to create a dedicated kafka user you should skip step 1.
+If you choose to skip it on kafka.service and zookeeper.service files you should add current user as User
 
 <h4>Step 1 — Creating a User for Kafka</h4>
 
@@ -371,6 +372,8 @@ Zookeeper is a service that Kafka uses to manage its cluster state and configura
 
 Create the unit file for zookeeper:
 
+You should replace '/home/kafka/kafka' paths below with your installed kafka folder path. Same applies for User, if you created a dedicated kafka user as mentioned above you should leave it, else add your user name
+
 <code>sudo nano /etc/systemd/system/zookeeper.service</code>
 
 Enter the following unit definition into the file: /etc/systemd/system/zookeeper.service
@@ -399,6 +402,7 @@ Next, create the systemd service file for kafka:
 <code>sudo nano /etc/systemd/system/kafka.service </code>
 
 Enter the following unit definition into the file: /etc/systemd/system/kafka.service
+You should replace '/home/kafka/kafka' paths below with your installed kafka folder path. Same applies for User, if you created a dedicated kafka user as mentioned above you should leave it, else add your user name
 
 <code>
 
@@ -465,3 +469,20 @@ To check if Cassandra is running execute:
 
 <code>systemctl status cassandra</code>
 
+
+# Running application
+
+Make sure mvnw and build.sh files have executable permissions
+Navigate through terminal on top folder and run
+
+<code>./mvnw ./build.sh</code>
+
+This will compile,build all projects and will start server that listens on port 9090. Open new tab and from the same folder start kafka consumer service enter
+
+<code>./mvnw exec:java -Dexec.mainClass="com.leozinho.kafka.consumer.LogEventConsumer" -f kafka-consumer/pom.xml</code>
+
+And to test end-to-end our application start client that will generate the LoggingEvent and will send them to server.Open another tab on console and from the same folder enter:
+
+<code>./mvnw exec:java -Dexec.mainClass="com.leozinho.thrift.client.LoggGeneratorClient" -f Thrift-Client/pom.xml</code>
+
+The end-to-end demonstration of the application goal can be viewed through console messages.
