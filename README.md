@@ -477,11 +477,19 @@ Navigate through terminal on top folder and run
 
 <code>./mvnw ./build.sh</code>
 
-This will compile,build all projects and will start server that listens on port 9090. Open new tab and from the same folder start kafka consumer service enter
+This will compile,build all projects and will start server that listens on port 9090. Before proceeding be sure kafka service is running. Enter
+
+<code>sudo systemctl status kafka</code>
+
+You should see an output as latest message 
+
+<code>Started kafka.service.</code>
+
+Open new tab and from the same folder start kafka consumer service entering
 
 <code>./mvnw exec:java -Dexec.mainClass="com.leozinho.kafka.consumer.LogEventConsumer" -f kafka-consumer/pom.xml</code>
 
-And to test end-to-end our application start client that will generate the LoggingEvent and will send them to server.Open another tab on console and from the same folder enter:
+And the final part of our application is to start client that will generate the LoggingEvent and will send them to server.Open another tab on console and from the same folder and enter:
 
 <code>./mvnw exec:java -Dexec.mainClass="com.leozinho.thrift.client.LoggGeneratorClient" -f Thrift-Client/pom.xml</code>
 
