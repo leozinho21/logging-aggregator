@@ -475,7 +475,7 @@ To check if Cassandra is running execute:
 Make sure mvnw and build.sh files have executable permissions
 Navigate through terminal on top folder and run
 
-<code>./mvnw ./build.sh</code>
+<code>./build.sh</code>
 
 This will compile,build all projects and will start server that listens on port 9090. Before proceeding be sure kafka service is running. Enter
 
