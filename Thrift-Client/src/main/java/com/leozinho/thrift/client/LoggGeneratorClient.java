@@ -1,5 +1,7 @@
 package com.leozinho.thrift.client;
 
+import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -85,16 +87,19 @@ public class LoggGeneratorClient {
 		private List<LoggingEvent> generateEvents() {
 
 			List<LoggingEvent> list = new ArrayList<>();
-
-			LoggingEvent ev1 = createEv(ZonedDateTime.now(), Severity.INFO, "com.leozinho.test.Test1Class",
+			
+			DateTimeFormatter formatter = DateTimeFormatter.ISO_INSTANT
+		            .withZone(ZoneId.systemDefault());
+			
+			LoggingEvent ev1 = createEv(formatter.format(Instant.now()), Severity.INFO, "com.leozinho.test.Test1Class",
 					"Test event 1");
-			LoggingEvent ev2 = createEv(ZonedDateTime.now(), Severity.INFO, "com.leozinho.test.Test2Class",
+			LoggingEvent ev2 = createEv(formatter.format(Instant.now()), Severity.INFO, "com.leozinho.test.Test2Class",
 					"Test event 2");
-			LoggingEvent ev3 = createEv(ZonedDateTime.now(), Severity.INFO, "com.leozinho.test.Test3Class",
+			LoggingEvent ev3 = createEv(formatter.format(Instant.now()), Severity.INFO, "com.leozinho.test.Test3Class",
 					"Test event 3");
-			LoggingEvent ev4 = createEv(ZonedDateTime.now(), Severity.INFO, "com.leozinho.test.Test4Class",
+			LoggingEvent ev4 = createEv(formatter.format(Instant.now()), Severity.INFO, "com.leozinho.test.Test4Class",
 					"Test event 4");
-			LoggingEvent ev5 = createEv(ZonedDateTime.now(), Severity.INFO, "com.leozinho.test.Test5Class",
+			LoggingEvent ev5 = createEv(formatter.format(Instant.now()), Severity.INFO, "com.leozinho.test.Test5Class",
 					"Test event 5");
 			
 			list.add(ev1);
@@ -107,13 +112,13 @@ public class LoggGeneratorClient {
 		}
 	}
 
-	private static LoggingEvent createEv(ZonedDateTime time, Severity severity, String source, String message) {
+	private static LoggingEvent createEv(String time, Severity severity, String source, String message) {
 		
 		LoggingEvent ev = new LoggingEvent();
 		ev.severity = severity;
 		ev.sourceName = source;
 		ev.message = message;
-		ev.time = DateTimeFormatter.ofPattern("dd/MM/yyyy hh:mm:ss").format(time);
+		ev.time = time;
 		
 		logger.debug("Creating LoggingEvent [{}] severity [{}]", message,severity);
 		
